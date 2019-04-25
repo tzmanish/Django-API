@@ -1,0 +1,63 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+<center>
+    <form action="/fetch/" style="margin-top:40vh">
+        Enter time in seconds: <input type="text" autofocus> <input type="submit" value="fetch">
+    </form>
+    <span></span>
+    <div></div>
+    <br>
+    <canvas width="0" height="0" style="border:1px solid #d3d3d3;">Your browser does not support the canvas element.</canvas>
+    
+</center>
+ 
+<script>
+    $( "form" ).submit(function( event ) {        
+        event.preventDefault();
+        var seconds = Number($( "input:first" ).val());
+        var url = $( "form" ).attr('action');
+
+        var settings = {
+            "url": url,
+            "method": "GET",
+            "headers": {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+            },
+            "data": {
+                "seconds":seconds,
+            },
+        }
+
+        $.ajax(settings).done(function (response) {
+            console.log(response);
+            $( "span" ).text( "Input : "+response.input+" | Closest : "+response.closest ).show();
+            var canvasHeight = Number(response.height), canvasWidth = Number(response.width);
+            var canvas = document.getElementsByTagName('canvas')[0];
+            var ctx = canvas.getContext('2d');
+
+            $('form').css({'margin-top':'5vh'});
+            canvas.width=canvasWidth;
+            canvas.height=canvasHeight;
+
+            var objects = response.index;
+            var st="";
+            for(x in objects){
+                object=objects[x];
+                var x1 = object.bbox[0], y1 = object.bbox[1], x2 = object.bbox[2], y2 = object.bbox[3];
+                st += '['+x+"]: ";
+                st += JSON.stringify(object, null, 2);
+                st+='<br>';
+                ctx.fillStyle = "rgb( "+ x1%256 +","+ (canvasWidth-x1)%256 +", "+ (canvasWidth-y1)%256 +", 0.5)";
+                ctx.fillRect(x1, y1, x2-x1, y2-y1);
+
+                ctx.font = "30px Arial";
+                ctx.fillStyle = "rgb( "+ (canvasWidth-x1)%256 +","+ x1%256 +", "+ y1%256 +")";
+                ctx.textAlign = "center";
+                ctx.fillText('['+x+']', (x1+x2)/2, (y1+y2)/2);
+            }
+            ctx.stroke();
+            $( "div" ).html(st).show();
+        });
+    });
+</script>
